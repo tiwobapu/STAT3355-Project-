@@ -130,7 +130,7 @@ kable(head(swimming_olympics[, c("Name", "NOC", "Year", "Population")]),
 ```
 
 The resulting dataset now includes a Population column alongside each athlete record, enabling demographic comparisons across countries. This merging step significantly enriches the dataset and supports more meaningful analysis of how country size or development may relate to Olympic swimming performance.
-
+*note that data for the country "AHO" (Netherlands Antilles) because the country no longer exists
 
 ***2. Summary of Data Before Cleaning***
 
