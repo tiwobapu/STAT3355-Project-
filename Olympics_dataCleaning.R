@@ -67,3 +67,12 @@ swimming_olympics <- merge(
   by.y = c("Country.Name", "Year"),
   all.x = TRUE
 )
+
+# Removes athletes whose countries or GDP data were not found during the merge
+swimming_olympics <- swimming_olympics[!is.na(swimming_olympics$Country) & 
+                                       !is.na(swimming_olympics$GDP.per.capita), ]
+
+#Final Inspection 
+head(swimming_olympics)
+summary(swimming_olympics)
+
