@@ -140,7 +140,7 @@ Prior to the cleaning process, the dataset contained several structural and qual
 
 The application of targeted cleaning techniques resulted in a standardized and enriched dataset. The data was subsetted to swimming events post-1992 and streamlined by removing redundant variables such as Season, City, and Games. To refine the demographics, missing values in the Age column were removed, and the data was capped at a realistic range of 13 to 35 years. A new categorical variable, Age_Group, was also added to facilitate cohort analysis. The categorical data for medals was standardized by replacing all blanks and NA entries with a clear "No Medal" label, ensuring 100% data completion for this variable. Lastly, by performing a left join with World Bank datasets, the NOC codes were linked to actual population figures, enabling advanced analysis such as calculating medals per capita and understanding the impact of a nation’s size on its Olympic success.
 
-***4. Documentation & Justification (5 points)***
+***4. Documentation & Justification ***
 
 The data cleaning process was designed to improve the overall quality, consistency, and usability of the dataset. Removing unrealistic Age values ensures that the dataset accurately reflects the population of Olympic swimmers and prevents distortion in statistical analysis.Replacing missing Medal values with "No Medal" preserves all observations while allowing clear distinctions between medal winners and non-winners. 
 
