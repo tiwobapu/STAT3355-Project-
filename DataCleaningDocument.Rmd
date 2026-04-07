@@ -1,0 +1,78 @@
+---
+title: "Data Cleaning Document"
+output: pdf_document
+author: "Archi Patel, , "
+date: "01/28/2026"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***1. Identification & Cleaning of Variables (4 points)***
+
+This section identifies key variables with data quality issues and outlines the cleaning techniques applied to improve the dataset. As part of the initial data preparation, the dataset was subsetted to include only swimming events and unnecessary variables such as Season, City, and Games were removed to simplify the analysis. In addition to variable-level cleaning, dataset merging was also performed to enrich the dataset with GDP and population information.
+
+
+```{r dataReading}
+setwd("E:/STAT3355")
+library(ggplot2)
+
+olympics_dataset <- read.csv("E:/STAT3355/Athletes_summer_games.csv")
+gdp_dataset <- read.csv("E:/STAT3355/gdp_dataset.csv")
+population_dataset <- read.csv("E:/STAT3355/Population_dataset.csv")
+
+
+swimming_olympics <- subset(olympics_dataset, Sport == "Swimming", select = c(-Season, 
+                                                                              -City, -Games))
+
+swimming_olympics <- swimming_olympics[swimming_olympics$Year >= 1992, ]
+```
+
+**1.1 Age**
+
+The Age variable contained missing values as well as unrealistic observations that fall outside the expected range for Olympic swimmers. Such values can distort statistical summaries and reduce the reliability of the analysis. In addition to that the age variable was also changed to distributed age range, making it convenient for analyzing. 
+
+
+```{r ageRange}
+summary(swimming_olympics$Age)
+
+swimming_olympics$Age_Group <- cut( swimming_olympics$Age,
+                                    breaks = c(0, 18, 25, 35, Inf),
+                                    labels = c("Under 18", "18-25", "26-35", "35+"))
+
+summary(swimming_olympics$Age_Group)
+
+```
+
+The distribution of Age before cleaning is shown below.
+
+```{r AgeplotBeforeCleaning}
+ggplot(swimming_olympics, aes(x = Age)) +
+  geom_boxplot(fill = "#2E75B6") +
+  labs(title = "Age Distribution BEFORE Outlier Removal") +
+  theme_minimal()
+```
+
+To improve data quality, all missing values were removed and the dataset was restricted to athletes aged between 13 and 35 years.
+
+```{r AgeplotAfterCleaning}
+swimming_olympics <- swimming_olympics[
+  !is.na(swimming_olympics$Age) &
+    swimming_olympics$Age >= 13 & swimming_olympics$Age <= 30, ]
+
+ggplot(swimming_olympics, aes(x = Age)) +
+  geom_boxplot(fill = "#1a9850") +
+  labs(title = "Age Distribution AFTER Outlier Removal") +
+  theme_minimal()
+
+```
+
+This ensures that only realistic observations are retained, improving the accuracy and validity of the dataset.
+
+***1.2 Medal***
+
+The Medal variable included missing values and empty strings, making it difficult to distinguish between athletes who did not win a medal and those with incomplete data.
+
+To resolve this issue, all missing and blank entries were replaced with the label "No Medal", and the original variable was removed.
+
