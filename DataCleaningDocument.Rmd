@@ -1,12 +1,13 @@
 ---
 title: "Data Cleaning Document"
 output: pdf_document
-author: "Archi Patel, Amanda Lin Contreras, Travis A Thomas"
-date: "08/04/2026"
+author: "Archi Patel,Amanda Contreras, "
+date: "04/08/2026"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, 
+                      message = FALSE, results = 'hide')
 ```
 
 ***1. Identification & Cleaning of Variables***
@@ -14,18 +15,19 @@ knitr::opts_chunk$set(echo = TRUE)
 This section identifies key variables with data quality issues and outlines the cleaning techniques applied to improve the dataset. As part of the initial data preparation, the dataset was subsetted to include only swimming events and unnecessary variables such as Season, City, and Games were removed to simplify the analysis. In addition to variable-level cleaning, dataset merging was also performed to enrich the dataset with GDP and population information.
 
 
-```{r dataReading}
+```{r dataReading,echo=FALSE}
 setwd("E:/STAT3355")
 library(ggplot2)
-
+library(knitr)
 olympics_dataset <- read.csv("E:/STAT3355/Athletes_summer_games.csv")
 gdp_dataset <- read.csv("E:/STAT3355/gdp_dataset.csv")
-population_dataset <- read.csv("E:/STAT3355/Population_dataset.csv")
+population_dataset <- read.csv("E:/STAT3355/Population_dataset.csv", skip = 4)
 
 
-swimming_olympics <- subset(olympics_dataset, Sport == "Swimming")
-swimming_olympics_beforeCleaning <- subset(olympics_dataset, Sport == "Swimming")
+swimming_olympics <- subset(olympics_dataset, Sport == "Swimming", select = c(-Season, 
+                                                                              -City, -Games))
 
+swimming_olympics <- swimming_olympics[swimming_olympics$Year >= 1992, ]
 ```
 
 **1.1 Age**
@@ -33,7 +35,7 @@ swimming_olympics_beforeCleaning <- subset(olympics_dataset, Sport == "Swimming"
 The Age variable contained missing values as well as unrealistic observations that fall outside the expected range for Olympic swimmers. Such values can distort statistical summaries and reduce the reliability of the analysis. In addition to that the age variable was also changed to distributed age range, making it convenient for analyzing. 
 
 
-```{r ageRange}
+```{r ageRange, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 summary(swimming_olympics$Age)
 
 swimming_olympics$Age_Group <- cut( swimming_olympics$Age,
@@ -46,7 +48,7 @@ summary(swimming_olympics$Age_Group)
 
 The distribution of Age before cleaning is shown below.
 
-```{r AgeplotBeforeCleaning}
+```{r AgeplotBeforeCleaning, echo=FALSE, warning=FALSE, message=FALSE}
 ggplot(swimming_olympics, aes(x = Age)) +
   geom_boxplot(fill = "#2E75B6") +
   labs(title = "Age Distribution BEFORE Outlier Removal") +
@@ -55,10 +57,15 @@ ggplot(swimming_olympics, aes(x = Age)) +
 
 To improve data quality, all missing values were removed and the dataset was restricted to athletes aged between 13 and 35 years.
 
-```{r AgeplotAfterCleaning}
+```{r AgeplotAfterCleaning, echo=FALSE}
 swimming_olympics <- swimming_olympics[
   !is.na(swimming_olympics$Age) &
-    swimming_olympics$Age >= 13 & swimming_olympics$Age <= 30, ]
+    swimming_olympics$Age >= 13 & swimming_olympics$Age <= 35, ]
+
+ggplot(swimming_olympics, aes(x = Age)) +
+  geom_boxplot(fill = "#1a9850") +
+  labs(title = "Age Distribution AFTER Outlier Removal") +
+  theme_minimal()
 
 ```
 
@@ -68,169 +75,58 @@ This ensures that only realistic observations are retained, improving the accura
 
 The Medal variable included missing values and empty strings, making it difficult to distinguish between athletes who did not win a medal and those with incomplete data. Before the Medal variable was cleaned the variable summary looked as below.
 
-```{r medalSummary}
+```{r medalSummary, results='markup'}
 medal_before <- as.data.frame(table(swimming_olympics$Medal, useNA = "ifany"))
 colnames(medal_before) <- c("Medal", "Count")
-
-medal_before
+medal_before$Medal <- ifelse(medal_before$Medal == "", "(blank/missing)", 
+                             as.character(medal_before$Medal))
+kable(medal_before, caption = "Medal Distribution Before Cleaning")
 
 ```
 
 To resolve this issue, all missing and blank entries were replaced with the label "No Medal", and the original variable was removed.
 
-```{r medalCleaned}
+```{r medalCleaned, results='markup'}
 
-swimming_olympics$Medal_Cleaned <- ifelse( is.na(swimming_olympics$Medal) | 
-                                  swimming_olympics$Medal == "","No Medal", 
+swimming_olympics$Medal_Cleaned <- ifelse(is.na(swimming_olympics$Medal) | 
+                                  swimming_olympics$Medal == "", "No Medal", 
                                   swimming_olympics$Medal)
-
 medal_after <- as.data.frame(table(swimming_olympics$Medal_Cleaned, useNA = "ifany"))
 colnames(medal_after) <- c("Medal", "Count")
+kable(medal_after, caption = "Medal Distribution After Cleaning")
 
-medal_after
-
-swimming_olympics$Medal <- NULL
 
 ```
 
 This transformation ensures a complete and interpretable categorical variable without losing observations.
 
-***1.3 Sex (Gender) Variable***
+***1.3 Country Data Integration ***
 
-The Sex variable was originally encoded using abbreviated labels ("M" and "F"), which are less suitable for interpretation and presentation.
+The original athlete dataset identified countries only by a three-letter NOC code, which lacked demographic context such as population size. To allow for a more comprehensive analysis, the dataset was integrated with a World Bank population dataset. This process involved standardizing the "Country Code" column to match the "NOC" format and performing a left join to align population figures with each athlete's record
 
-To improve clarity, these values were converted into descriptive labels, and the original variable was removed.
+```{r CountryplotBeforeCleaning, results='markup'}
 
-```{r GenderVar}
-swimming_olympics$Gender <- ifelse(
-  swimming_olympics$Sex == "M", "Male", "Female"
-)
-
-swimming_olympics$Sex <- NULL
-```
-
-This enhances readability and ensures consistency in reporting.
-
-***1.4 Dataset Merging and Integration***
-
-As part of the data cleaning process, multiple datasets were merged to enrich the analysis. The swimming dataset was first filtered to include only relevant observations and variables.
-
-
-```{r variableRemoval}
-
-##Before Cleaning
-summary(swimming_olympics)
-
-swimming_olympics <- subset(swimming_olympics, Sport == "Swimming", select = 
-                              c(-Season, -City, -Games, -X))
-
-swimming_olympics <- swimming_olympics[swimming_olympics$Year >= 1992, ]
-
-#After Cleaning
-summary(swimming_olympics)
-```
-
-A country mapping table was created to standardize country names across datasets, ensuring compatibility during merging.
-
-```{r country_map}
-
-country_map <- data.frame(
-  NOC = c("USA","GBR","AUS","CHN","RUS","GER","FRA","ITA","JPN","CAN",
-          "NED","SWE","HUN","BRA","RSA","ESP","NZL","POL","DEN","UKR",
-          "GRE","ARG","FIN","NOR","BEL","AUT","MEX","CZE","SVK","KOR"),
-  Country = c("United States","United Kingdom","Australia","China","Russia",
-              "Germany","France","Italy","Japan","Canada",
-              "Netherlands","Sweden","Hungary","Brazil","South Africa",
-              "Spain","New Zealand","Poland","Denmark","Ukraine",
-              "Greece","Argentina","Finland","Norway","Belgium","Austria",
-              "Mexico","Czech Republic","Slovakia","South Korea")
-)
-
-swimming_olympics <- merge(swimming_olympics, country_map, by="NOC", all.x=TRUE)
+kable(head(swimming_olympics[, c("Name", "NOC", "Year")]), 
+      caption = "Athlete data prior to merging with population statistics")
 
 ```
 
-The dataset was then merged with GDP data to incorporate economic indicators.
+As shown in the table above, the dataset initially contained only the NOC code to identify each athlete's country, with no demographic information available for further analysis.
+To integrate population data, the Country Code column in the World Bank dataset was first renamed to "NOC" to match the identifier used in the athlete dataset. A left join was then performed using the NOC code as the common key, ensuring that all athlete records were retained even if a matching population entry was not found.
 
-```{r gdpMerge}
+```{r CountryplotClean, results='markup'}
 
-swimming_olympics <- merge(
-  swimming_olympics,
-  gdp_dataset[, c("Entity", "Year", "GDP.per.capita")],
-  by.x = c("Country", "Year"),
-  by.y = c("Entity", "Year"),
-  all.x = TRUE
-)
 
+colnames(population_dataset)[colnames(population_dataset) == "Country.Code"] <- "NOC"
+
+swimming_olympics <- merge(swimming_olympics, 
+                           population_dataset[, c("NOC", "X2016")], 
+                           by = "NOC", all.x = TRUE)
+
+colnames(swimming_olympics)[colnames(swimming_olympics) == "X2016"] <- "Population"
+
+kable(head(swimming_olympics[, c("Name", "NOC", "Year", "Population")]),
+      caption = "Athlete data after merging with population statistics")
 ```
 
-Population data was reshaped from wide to long format before merging to ensure compatibility and then merged.
-
-```{r populationMerge}
-
-population_dataset <- reshape(population_dataset,
-                              varying = names(population_dataset)
-                                             [5:ncol(population_dataset)],
-                              v.names = "Population",
-                              timevar = "Year",
-                              times = as.integer(sub("X", "", names(population_dataset)[5:ncol(population_dataset)])),
-                              direction = "long")
-
-swimming_olympics <- merge(
-  swimming_olympics,
-  population_dataset[, c("Country.Name", "Year", "Population")],
-  by.x = c("Country", "Year"),
-  by.y = c("Country.Name", "Year"),
-  all.x = TRUE
-)
-```
-
-Finally, observations with missing Country or GDP values were removed to ensure a complete dataset.
-
-```{r missingRemoval}
-
-swimming_olympics <- swimming_olympics[!is.na(swimming_olympics$Country) & 
-                                   !is.na(swimming_olympics$GDP.per.capita), ]
-
-```
-
-This integration process enhances the dataset by adding valuable contextual information while maintaining consistency and completeness.
-
-***2. Summary of Data Before Cleaning***
-
-Before cleaning, the dataset contained several issues that could negatively affect analysis. Missing values were present in key variables such as Age and Medal, leading to incomplete observations. Additionally, the Age variable included extreme values that were not realistic for Olympic swimmers, resulting in a skewed distribution.
-
-Categorical variables such as Sex were not presented in a clear format, reducing interpretability. Furthermore, merging datasets introduced additional missing values due to unmatched country names and incomplete records.
-
-The summary statistics below illustrate the condition of the dataset prior to cleaning.
-
-```{r summaryBefore}
-summary(swimming_olympics_beforeCleaning)
-```
-
-These issues highlighted the need for systematic cleaning to ensure reliable and meaningful analysis.
-
-***3. Summary of Data After Cleaning***
-
-After applying the cleaning procedures, the dataset showed substantial improvement in quality and consistency. Missing and unrealistic Age values were removed, resulting in a more accurate representation of athletes. The Medal variable was standardized, ensuring that all entries were properly categorized.
-
-The Gender variable was transformed into a clear and descriptive format, enhancing readability. Additionally, incomplete records with missing Country or GDP values were removed, ensuring that the dataset is suitable for further analysis.
-
-The updated dataset is summarized below.
-
-```{r summaryAfter}
-head(swimming_olympics) 
-summary(swimming_olympics)
-```
-
-The improved Age distribution can be seen in the following visualization.
-
-```{r AgeAfter}
-ggplot(swimming_olympics, aes(x = Age)) +
-  geom_boxplot(fill = "#1a9850") +
-  labs(title = "Age Distribution AFTER Outlier Removal") +
-  theme_minimal()
-
-```
-
-The results demonstrate a more concentrated and realistic distribution, indicating successful removal of outliers.
+The resulting dataset now includes a Population column alongside each athlete record, enabling demographic comparisons across countries. This merging step significantly enriches the dataset and supports more meaningful analysis of how country size or development may relate to Olympic swimming performance.
