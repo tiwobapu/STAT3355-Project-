@@ -130,3 +130,21 @@ kable(head(swimming_olympics[, c("Name", "NOC", "Year", "Population")]),
 ```
 
 The resulting dataset now includes a Population column alongside each athlete record, enabling demographic comparisons across countries. This merging step significantly enriches the dataset and supports more meaningful analysis of how country size or development may relate to Olympic swimming performance.
+
+
+***2. Summary of Data Before Cleaning***
+
+Prior to the cleaning process, the dataset contained several structural and qualitative issues that would have skewed any analytical findings. The original data included all Olympic sports and a vast historical range, creating a high volume of irrelevant data for a swimming-specific study. In terms of specific variables, the Age column was plagued by missing values and extreme outliers—unrealistic ages for elite swimmers—that would have biased mean and median calculations. Similarly, the Medal column contained both NA values and empty strings, making it impossible to distinguish between a "non-medal" finish and a missing data point. Finally, countries were identified only by three-letter NOC codes, providing no socio-economic or demographic context, such as population size, to explain performance variations.
+
+***3. Summary of Data After Cleaning***
+
+The application of targeted cleaning techniques resulted in a standardized and enriched dataset. The data was subsetted to swimming events post-1992 and streamlined by removing redundant variables such as Season, City, and Games. To refine the demographics, missing values in the Age column were removed, and the data was capped at a realistic range of 13 to 35 years. A new categorical variable, Age_Group, was also added to facilitate cohort analysis. The categorical data for medals was standardized by replacing all blanks and NA entries with a clear "No Medal" label, ensuring 100% data completion for this variable. Lastly, by performing a left join with World Bank datasets, the NOC codes were linked to actual population figures, enabling advanced analysis such as calculating medals per capita and understanding the impact of a nation’s size on its Olympic success.
+
+***4. Documentation & Justification (5 points)***
+
+The data cleaning process was designed to improve the overall quality, consistency, and usability of the dataset. Removing unrealistic Age values ensures that the dataset accurately reflects the population of Olympic swimmers and prevents distortion in statistical analysis.Replacing missing Medal values with "No Medal" preserves all observations while allowing clear distinctions between medal winners and non-winners. 
+
+The merging of GDP and population datasets adds valuable socioeconomic context, enabling more comprehensive analysis. However, this process introduced missing values, which were addressed by removing incomplete records to maintain data integrity.
+
+Overall, these steps improve the dataset in terms of accuracy, completeness, consistency, and analytical usefulness, ensuring that it is well-prepared for further statistical analysis and visualization.
+
