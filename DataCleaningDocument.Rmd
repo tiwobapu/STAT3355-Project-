@@ -9,7 +9,7 @@ date: "01/28/2026"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-***1. Identification & Cleaning of Variables (4 points)***
+***1. Identification & Cleaning of Variables***
 
 This section identifies key variables with data quality issues and outlines the cleaning techniques applied to improve the dataset. As part of the initial data preparation, the dataset was subsetted to include only swimming events and unnecessary variables such as Season, City, and Games were removed to simplify the analysis. In addition to variable-level cleaning, dataset merging was also performed to enrich the dataset with GDP and population information.
 
@@ -72,7 +72,32 @@ This ensures that only realistic observations are retained, improving the accura
 
 ***1.2 Medal***
 
-The Medal variable included missing values and empty strings, making it difficult to distinguish between athletes who did not win a medal and those with incomplete data.
+The Medal variable included missing values and empty strings, making it difficult to distinguish between athletes who did not win a medal and those with incomplete data. Before the Medal variable was cleaned the variable summary looked as below.
+
+```{r medalSummary}
+medal_before <- as.data.frame(table(swimming_olympics$Medal, useNA = "ifany"))
+colnames(medal_before) <- c("Medal", "Count")
+
+medal_before
+
+```
 
 To resolve this issue, all missing and blank entries were replaced with the label "No Medal", and the original variable was removed.
+
+```{r medalCleaned}
+
+swimming_olympics$Medal_Cleaned <- ifelse( is.na(swimming_olympics$Medal) | 
+                                  swimming_olympics$Medal == "","No Medal", 
+                                  swimming_olympics$Medal)
+
+medal_after <- as.data.frame(table(swimming_olympics$Medal_Cleaned, useNA = "ifany"))
+colnames(medal_after) <- c("Medal", "Count")
+
+medal_after
+
+
+```
+
+This transformation ensures a complete and interpretable categorical variable without losing observations.
+
 
