@@ -1,7 +1,7 @@
 ---
 title: "Data Cleaning Document"
 output: pdf_document
-author: "Archi Patel,Amanda Contreras, "
+author: "Archi Patel,Amanda Contreras, Travis Thomas"
 date: "04/08/2026"
 ---
 
